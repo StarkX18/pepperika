@@ -1,0 +1,18 @@
+{
+  "name": "mystery-rules-chat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Dating chat where each conversation has hidden rules — discover them together",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
