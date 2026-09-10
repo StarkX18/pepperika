@@ -9,31 +9,39 @@ const TIER_LABELS = {
 
 export default function ChatRoom({
   conversation,
+  myParticipantId,
   onSend,
   onGuess,
   onHint,
   guessResult,
   hintResult,
   error,
+  aiTyping,
 }) {
   const [text, setText] = useState('');
   const [guess, setGuess] = useState('');
   const [showGuess, setShowGuess] = useState(false);
+  const [copied, setCopied] = useState(false);
   const bottomRef = useRef(null);
 
-  const me = conversation?.participants?.[0];
-  const them = conversation?.participants?.[1];
+  const me = conversation?.participants?.find((p) => p.id === myParticipantId);
+  const them = conversation?.participants?.find((p) => p.id !== myParticipantId && p.id !== 'pending-partner');
   const hiddenCount = (conversation?.ruleCount || 0) - (conversation?.revealedCount || 0);
+  const isWaiting = conversation?.status === 'waiting';
+  const isTwoPlayer = conversation?.mode === 'two_player';
+  const inviteUrl = conversation?.inviteCode
+    ? `${window.location.origin}/?join=${conversation.inviteCode}`
+    : null;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation?.messages?.length]);
+  }, [conversation?.messages?.length, aiTyping]);
 
   if (!conversation) return <div className="card">Connecting…</div>;
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!text.trim()) return;
+    if (!text.trim() || isWaiting) return;
     onSend(text);
     setText('');
   };
@@ -45,14 +53,32 @@ export default function ChatRoom({
     setGuess('');
   };
 
+  const copyInvite = async () => {
+    if (!inviteUrl) return;
+    await navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const headerName = isWaiting ? 'Waiting for partner…' : them?.name || 'Match';
+  const headerBio = isWaiting
+    ? 'Share your invite link below'
+    : them?.bio || (conversation.mode === 'solo_ai' ? 'AI match · LLM chat' : '');
+
   return (
     <div className="chat-room card">
       <div className="chat-header">
         <div className="match-info">
-          <span className="avatar lg">{them?.avatar}</span>
+          <span className="avatar lg">{isWaiting ? '⏳' : them?.avatar}</span>
           <div>
-            <h2>{them?.name}</h2>
-            <p>{them?.bio}</p>
+            <h2>{headerName}</h2>
+            <p>{headerBio}</p>
+            {conversation.mode === 'solo_ai' && (
+              <span className="mode-badge">{conversation.llmEnabled ? 'LLM chat on' : 'Template chat (add OPENAI_API_KEY)'}</span>
+            )}
+            {isTwoPlayer && !isWaiting && (
+              <span className="mode-badge">{conversation.onlineCount || 0} online</span>
+            )}
           </div>
         </div>
         <div className="stats">
@@ -70,6 +96,21 @@ export default function ChatRoom({
           </div>
         </div>
       </div>
+
+      {isTwoPlayer && inviteUrl && (
+        <div className="invite-bar">
+          <code>{inviteUrl}</code>
+          <button type="button" className="btn secondary small" onClick={copyInvite}>
+            {copied ? 'Copied!' : 'Copy link'}
+          </button>
+        </div>
+      )}
+
+      {isWaiting && (
+        <div className="waiting-banner">
+          Waiting for player 2… send them the invite link above.
+        </div>
+      )}
 
       {conversation.unlockedFeatures?.length > 0 && (
         <div className="unlocks">
@@ -90,18 +131,19 @@ export default function ChatRoom({
       </div>
 
       <div className="messages">
-        {conversation.messages.length === 0 && (
+        {!isWaiting && conversation.messages.length === 0 && (
           <div className="empty-state">
             <p>Say something — but something feels… different about this chat.</p>
             <p className="muted">{hiddenCount} mystery rules are active. Watch for nudges.</p>
           </div>
         )}
         {conversation.messages.map((m) => {
-          const isMe = m.senderId === me?.id;
+          const isMe = m.senderId === myParticipantId;
+          const sender = conversation.participants.find((p) => p.id === m.senderId);
           return (
             <div key={m.id} className={`message ${isMe ? 'mine' : 'theirs'}`}>
               <div className="bubble">
-                {!isMe && <span className="msg-avatar">{them?.avatar}</span>}
+                {!isMe && <span className="msg-avatar">{sender?.avatar}</span>}
                 <div>
                   <p>{m.text}</p>
                   {m.violations?.length > 0 && (
@@ -112,6 +154,14 @@ export default function ChatRoom({
             </div>
           );
         })}
+        {aiTyping && (
+          <div className="message theirs">
+            <div className="bubble">
+              <span className="msg-avatar">{them?.avatar}</span>
+              <div className="typing-indicator">typing…</div>
+            </div>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -139,39 +189,43 @@ export default function ChatRoom({
         </div>
       )}
 
-      <div className="actions-row">
-        <button className="btn secondary" onClick={() => setShowGuess(!showGuess)}>
-          Guess a rule ({hiddenCount} left)
-        </button>
-        <button className="btn secondary" onClick={onHint}>
-          Get hint (10 Spark)
-        </button>
-      </div>
+      {!isWaiting && (
+        <>
+          <div className="actions-row">
+            <button className="btn secondary" onClick={() => setShowGuess(!showGuess)}>
+              Guess a rule ({hiddenCount} left)
+            </button>
+            <button className="btn secondary" onClick={onHint}>
+              Get hint (10 Spark)
+            </button>
+          </div>
 
-      {showGuess && (
-        <form className="guess-form" onSubmit={handleGuess}>
-          <input
-            className="input"
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            placeholder='e.g. "messages must include an emoji"'
-          />
-          <button className="btn primary" type="submit">Submit guess</button>
-        </form>
+          {showGuess && (
+            <form className="guess-form" onSubmit={handleGuess}>
+              <input
+                className="input"
+                value={guess}
+                onChange={(e) => setGuess(e.target.value)}
+                placeholder='e.g. "messages must include an emoji"'
+              />
+              <button className="btn primary" type="submit">Submit guess</button>
+            </form>
+          )}
+
+          <form className="composer" onSubmit={handleSend}>
+            <input
+              className="input"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={isWaiting ? 'Waiting for partner…' : 'Type a message…'}
+              disabled={conversation.status === 'completed' || isWaiting}
+            />
+            <button className="btn primary" type="submit" disabled={conversation.status === 'completed' || isWaiting}>
+              Send
+            </button>
+          </form>
+        </>
       )}
-
-      <form className="composer" onSubmit={handleSend}>
-        <input
-          className="input"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type a message…"
-          disabled={conversation.status === 'completed'}
-        />
-        <button className="btn primary" type="submit" disabled={conversation.status === 'completed'}>
-          Send
-        </button>
-      </form>
     </div>
   );
 }

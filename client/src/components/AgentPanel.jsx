@@ -4,13 +4,19 @@ const AGENT_ICONS = {
   HintAgent: '💡',
   ModerationAgent: '🛡️',
   RuleMonitorAgent: '👁️',
+  ChatPartnerAgent: '💬',
 };
 
-export default function AgentPanel({ agents, agentLog = [] }) {
+export default function AgentPanel({ agents, agentLog = [], llmEnabled }) {
   return (
     <aside className="agent-panel card">
       <h3>Agent orchestra</h3>
-      <p className="muted">Five specialized agents run each conversation.</p>
+      <p className="muted">
+        Six specialized agents run each conversation.
+        {llmEnabled != null && (
+          <> LLM: {llmEnabled ? '✅ active' : '⚠️ set OPENAI_API_KEY'}</>
+        )}
+      </p>
 
       <div className="agent-list">
         {agents?.agents?.map((a) => (

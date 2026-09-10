@@ -19,15 +19,42 @@ A dating chat prototype where **every match has hidden conversation rules**. Two
                         React Client
 ```
 
-### Agents
+## Play modes
+
+| Mode | Description |
+|------|-------------|
+| **AI Match** | Chat with an LLM-powered dating match (`ChatPartnerAgent`) |
+| **2 Player** | Create a room, share the invite link, solve rules together |
+
+## LLM setup (optional)
+
+Set these env vars on the server for real LLM chat:
+
+```bash
+export OPENAI_API_KEY=sk-...
+export OPENAI_MODEL=gpt-4o-mini          # optional
+export OPENAI_BASE_URL=https://api.openai.com/v1  # optional, for compatible APIs
+```
+
+Without a key, AI matches use smart template fallbacks.
+
+## 2-player flow
+
+1. Choose **2 Player** on the home screen → **Create 2-player room**
+2. Copy the invite link (e.g. `http://localhost:5173/?join=ABC123`)
+3. Friend opens the link, enters their name, joins
+4. Both players chat in real time and guess rules together
+
+## Agents
 
 | Agent | Role |
 |-------|------|
-| **RuleGeneratorAgent** | Creates per-match rule sets (tier 1→4) |
-| **RuleMonitorAgent** | Detects violations, subtle nudges |
+| **ChatPartnerAgent** | LLM dating match replies (solo mode) |
+| **RuleGeneratorAgent** | Creates per-match rule sets |
+| **RuleMonitorAgent** | Violation detection & nudges |
 | **RuleJudgeAgent** | Adjudicates rule guesses |
-| **HintAgent** | Non-spoiling hints (costs Spark) |
-| **ModerationAgent** | Safety layer — always overrides game rules |
+| **HintAgent** | Non-spoiling hints |
+| **ModerationAgent** | Safety layer |
 
 ## Quick start
 

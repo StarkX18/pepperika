@@ -512,3 +512,96 @@ body {
   margin: 0.15rem 0 0;
   color: var(--muted);
 }
+
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.mode-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.mode-tab span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.mode-tab.active {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 1px var(--pink);
+}
+
+.invite-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(168, 85, 247, 0.08);
+  overflow-x: auto;
+}
+
+.invite-bar code {
+  font-size: 0.78rem;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.btn.small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.waiting-banner,
+.invite-badge {
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--gold);
+  border-bottom: 1px solid var(--border);
+}
+
+.invite-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  margin-top: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.mode-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: var(--purple);
+  background: rgba(168, 85, 247, 0.15);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+}
+
+.typing-indicator {
+  padding: 0.65rem 1rem;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
